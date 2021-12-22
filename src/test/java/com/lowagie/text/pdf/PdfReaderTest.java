@@ -1,5 +1,6 @@
 package com.lowagie.text.pdf;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayOutputStream;
@@ -54,6 +55,23 @@ public class PdfReaderTest {
 	// this one works: PdfReader rdr = new PdfReader(filename);
 	rdr.consolidateNamedDestinations(); // does not help
 	rdr.getLinks(1);
+    }
+
+    @Ignore("this PDF is no longer valid format, no junk allowed after EOF marker")
+    @Test
+    public void testEofConsistency() throws Exception {
+        String filename = PdfTestBase.RESOURCES_DIR + "Integracija_placa_test.pdf";
+		PdfReader rdr = new PdfReader(new
+			RandomAccessFileOrArray(filename), new byte[0]);
+		int n = rdr.getNumberOfPages();
+		int i = 0;
+		
+		while (i < n) {
+	
+			String s = new String(rdr.getPageContent(i + 1));
+			assertFalse(s.length() == 0 );
+			i++;
+		}
     }
 
 }

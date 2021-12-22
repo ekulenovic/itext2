@@ -1434,16 +1434,26 @@ public abstract class BaseFont {
         hits.put(fontRef.getNumber(), 1);
     }
     
-    private static void recourseFonts(PdfDictionary page, IntHashtable hits, ArrayList fonts, int level) {
+    public static PdfDictionary getAsDictWhereApplicable(PdfDictionary src, PdfName key) {
+        PdfDictionary dict = null;
+        PdfObject orig = src.getDirectObject(key);
+        if (orig != null && (orig instanceof PdfDictionary)) {
+            dict = (PdfDictionary) orig;
+        }
+        return dict;
+    }
+    
+    @SuppressWarnings("unchecked")
+	private static void recourseFonts(PdfDictionary page, IntHashtable hits, ArrayList fonts, int level) {
         ++level;
         if (level > 50) // in case we have an endless loop
             return;
-        PdfDictionary resources = page.getAsDict(PdfName.RESOURCES);
+        PdfDictionary resources = getAsDictWhereApplicable(page, PdfName.RESOURCES);
         if (resources == null)
             return;
-        PdfDictionary font = resources.getAsDict(PdfName.FONT);
+        PdfDictionary font = getAsDictWhereApplicable(resources, PdfName.FONT);
         if (font != null) {
-            for (Iterator it = font.getKeys().iterator(); it.hasNext();) {
+            for (Iterator<PdfName> it = font.getKeys().iterator(); it.hasNext();) {
                 PdfObject ft = font.get((PdfName)it.next());        
                 if (ft == null || !ft.isIndirect())
                     continue;
@@ -1453,10 +1463,10 @@ public abstract class BaseFont {
                 addFont((PRIndirectReference)ft, hits, fonts);
             }
         }
-        PdfDictionary xobj = resources.getAsDict(PdfName.XOBJECT);
+        PdfDictionary xobj = getAsDictWhereApplicable(resources, PdfName.XOBJECT);
         if (xobj != null) {
-            for (Iterator it = xobj.getKeys().iterator(); it.hasNext();) {
-                recourseFonts(xobj.getAsDict((PdfName)it.next()), hits, fonts, level);
+            for (Iterator<PdfName> it = xobj.getKeys().iterator(); it.hasNext();) {
+                recourseFonts(getAsDictWhereApplicable(xobj, (PdfName)it.next()), hits, fonts, level);
             }
         }
     }
